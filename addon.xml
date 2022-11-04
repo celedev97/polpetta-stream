@@ -13,15 +13,12 @@ provider-name="celedev97">
   <provides>video</provides>
 </extension>
 <extension point="xbmc.addon.metadata">
-  <summary lang="it">Example Kodi Video Plugin</summary>
-  <description lang="it_IT">An example video plugin for Kodi mediacenter.</description>
-  <disclaimer lang="it_IT">Free sample videos are provided by www.vidsplay.com.</disclaimer>
+  <summary lang="it">Polpetta Stream</summary>
+  <description lang="it_IT">Plugin per vedere in streaming anime in italiano</description>
+  <disclaimer lang="it_IT">Anime prelevati principalmente da animesaturn</disclaimer>
   <assets>
-    <icon>icon.png</icon>
-    <fanart>fanart.jpg</fanart>
-    <screenshot>resources\screenshot-01.jpg</screenshot>
-    <screenshot>resources\screenshot-02.jpg</screenshot>
-    <screenshot>resources\screenshot-03.jpg</screenshot>    
+    <icon>resources\images\icon.png</icon>
+    <fanart>resources\images\fanart.jpg</fanart>
   </assets>
   <news>Updated with latest artwork metadata</news>
 </extension>
