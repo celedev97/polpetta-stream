@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="plugin.video.example"
-version="2.4.0"
-name="Example Kodi Video Plugin"
-provider-name="Roman_V_M">
+<addon id="plugin.video.polpetta-stream"
+version="0.0.1"
+name="Polpetta Stream"
+provider-name="celedev97">
 <requires>
   <import addon="xbmc.python" version="3.0.0"/>
-  <import addon="script.module.requests" version="2.22.0"/>
-  <import addon="script.module.beautifulsoup4" version="4.9.1"/>
-  <import addon="script.module.selenium" version="3.141.0"/>
+  <import addon="script.module.requests" version="2.27.1"/>
+  <import addon="script.module.beautifulsoup4" version="4.9.3"/>
+  <import addon="script.common.plugin.cache" version="2.6.3"/>
 </requires>
 <extension point="xbmc.python.pluginsource" library="main.py">
   <provides>video</provides>
 </extension>
 <extension point="xbmc.addon.metadata">
-  <summary lang="en">Example Kodi Video Plugin</summary>
-  <description lang="en_GB">An example video plugin for Kodi mediacenter.</description>
-  <disclaimer lang="en_GB">Free sample videos are provided by www.vidsplay.com.</disclaimer>
+  <summary lang="it">Example Kodi Video Plugin</summary>
+  <description lang="it_IT">An example video plugin for Kodi mediacenter.</description>
+  <disclaimer lang="it_IT">Free sample videos are provided by www.vidsplay.com.</disclaimer>
   <assets>
     <icon>icon.png</icon>
     <fanart>fanart.jpg</fanart>
