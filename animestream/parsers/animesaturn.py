@@ -126,6 +126,8 @@ class AnimeSaturnCached(AnimeSaturnDirect):
         self._direct = AnimeSaturnDirect()
         self._log = log
 
+        os.makedirs(cache_dir, exist_ok=True)
+
     def get_anime_list(self) -> List[Anime]:
         cache_file = os.path.join(self._cacheDir, 'animes.json')
 
