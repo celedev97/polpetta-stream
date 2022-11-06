@@ -127,7 +127,7 @@ class AnimeSaturnCached(AnimeSaturnDirect):
         self._log = log
 
     def get_anime_list(self) -> List[Anime]:
-        cache_file = self._cacheDir + '/animes.json'
+        cache_file = os.path.join(self._cacheDir, 'animes.json')
 
         if os.path.exists(cache_file):
             # reading cache to get the anime list if it's updated
