@@ -1,0 +1,29 @@
+name: Build and release zip file
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version of the plugin to build'
+        required: true
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2.5.0
+
+    - name: Install zip
+      run: apt update && apt install zip -y
+
+    - name: Zip the plugin
+      run: zip -r plugin.video.polpetta-stream{{ github.event.inputs.version }}.zip .
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: plugin.video.polpetta-stream{{ github.event.inputs.version }}.zip
+        tag_name: v{{ github.event.inputs.version }}
+        draft: true
+        prerelease: true
