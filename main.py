@@ -1,25 +1,26 @@
-# Module: main
-# Author: Roman V. M.
-# Created on: 28.11.2014
-# License: GPL v.3 https://www.gnu.org/copyleft/gpl.html
-"""
-Example video plugin that is compatible with Kodi 19.x "Matrix" and above
-"""
+import re
 import sys
-from typing import Set, List
+from typing import List
 from urllib.parse import urlencode, parse_qsl
 
 import xbmc
+import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
 from animestream.anime import Anime
-from animestream.parsers import animesaturn
+from animestream.parsers.animesaturn import AnimeSaturnCached
 
 # Get the plugin url in plugin:// notation.
 _URL = sys.argv[0]
 # Get the plugin handle as an integer number.
 _HANDLE = int(sys.argv[1])
+
+# Get the local addon folder
+localDir = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+
+# Prepare the cached AnimeSaturn instance
+animesaturn = AnimeSaturnCached(localDir, lambda x: xbmc.log(x, level=xbmc.LOGINFO))
 
 
 # Declare an enum for actions
@@ -31,17 +32,7 @@ class Actions:
     DO_SEARCH = 'search'
 
 
-animes: List[Anime] = []
-
-
 def get_url(**kwargs):
-    """
-    Create a URL for calling the plugin recursively from the given set of keyword arguments.
-
-    :param kwargs: "argument=value" pairs
-    :return: plugin call URL
-    :rtype: str
-    """
     return '{}?{}'.format(_URL, urlencode(kwargs))
 
 
@@ -58,7 +49,7 @@ def play_video(url, referer=None):
 
 def show_anime_list(animes: List[Anime]):
     for anime in animes:
-        anime = animesaturn.get_anime_details(anime)
+        anime = animesaturn.fetch_anime_details(anime)
 
         anime_item = xbmcgui.ListItem(anime.name)
         anime_item.setInfo('video', {
@@ -82,9 +73,7 @@ def list_animes(page=0, size=10):
     search_item = xbmcgui.ListItem(label='Cerca Anime:')
     xbmcplugin.addDirectoryItem(_HANDLE, get_url(action=Actions.ASK_SEARCH), search_item, True)
 
-    global animes
-    if len(animes) == 0:
-        animes = animesaturn.get_anime_list()
+    animes = animesaturn.get_anime_list()
 
     # get the correct animes for this page
     animes_page = animes[page * size:page * size + size]
@@ -103,27 +92,24 @@ def list_animes(page=0, size=10):
 
 
 def list_episodes(anime_id):
-    global animes
-    # TODO: TROVA UN MODO DI SALVARE GLI ANIME IN MEMORIA PER NON DOVERLI RICARICARE OGNI VOLTA
-    if len(animes) == 0:
-        animes = animesaturn.get_anime_list()
+    animes = animesaturn.get_anime_list()
 
     anime = list(filter(lambda x: x.id == anime_id, animes))[0]
 
     # get episodes and create list in folder
-    anime = animesaturn.get_anime_details(anime)
+    anime = animesaturn.fetch_anime_details(anime)
     episodes = animesaturn.get_anime_episodes(anime)
 
     xbmcplugin.setPluginCategory(_HANDLE, anime.name)
 
     for episode in episodes:
-        episode_item = xbmcgui.ListItem(anime.name + " Ep." + str(episode.number))
+        episode_item = xbmcgui.ListItem(anime.name + " " + str(episode.name))
         episode_item.setProperty('IsPlayable', 'true')
         episode_item.setArt({'poster': anime.image, 'banner': anime.image, 'thumb': anime.image})
         episode_item.setInfo('video', {
-            'title': anime.name + " Episodio " + str(episode.number),
+            'title': anime.name + " " + str(episode.name),
             'plot': anime.description,
-            'episode': episode.number,
+            'episode': re.findall(r'\d+', episode.name)[-1],
             'showlink': anime.name,
             'mediatype': 'episode'
         })
@@ -140,7 +126,6 @@ def list_episodes(anime_id):
 
 def do_search(search_name):
     # search for anime
-    global animes
     animes = animesaturn.get_anime_list()
 
     xbmcplugin.setPluginCategory(_HANDLE, search_name)
@@ -172,7 +157,23 @@ def ask_search():
         if len(anime_name) > 3:
             do_search(anime_name)
         else:
-            xbmcgui.Dialog().notification('Polpetta-Stream', 'Inserisci almeno 4 caratteri per la ricerca', xbmcgui.NOTIFICATION_ERROR, 5000)
+            xbmcgui.Dialog().notification('Polpetta-Stream', 'Inserisci almeno 4 caratteri per la ricerca',
+                                          xbmcgui.NOTIFICATION_ERROR, 5000)
+
+
+def home_menu():
+    # create the home menu
+    xbmcplugin.setPluginCategory(_HANDLE, 'Polpetta-Stream')
+
+    # button search
+    search_item = xbmcgui.ListItem(label='Cerca Anime:')
+    xbmcplugin.addDirectoryItem(_HANDLE, get_url(action=Actions.ASK_SEARCH), search_item, True)
+
+    # button list
+    list_item = xbmcgui.ListItem(label='Lista Anime')
+    xbmcplugin.addDirectoryItem(_HANDLE, get_url(action=Actions.LIST_ANIMES), list_item, True)
+
+    xbmcplugin.endOfDirectory(_HANDLE)
 
 
 def router(paramstring):
@@ -188,7 +189,6 @@ def router(paramstring):
     params = dict(parse_qsl(paramstring))
     # Check the parameters passed to the plugin
     if params:
-
         if params['action'] == Actions.LIST_ANIMES:
             if 'page' in params:
                 list_animes(int(params['page']))
@@ -214,7 +214,7 @@ def router(paramstring):
     else:
         # If the plugin is called from Kodi UI without any parameters,
         # display the list of video categories
-        list_animes()
+        home_menu()
 
 
 if __name__ == '__main__':
@@ -222,4 +222,5 @@ if __name__ == '__main__':
     # We use string slicing to trim the leading '?' from the plugin call paramstring
     xbmc.log('CALLING PLUGIN')
     xbmc.log('PARAMS: {}'.format(sys.argv))
+
     router(sys.argv[2][1:])
