@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="plugin.video.polpetta-stream"
-version="0.0.1"
+version="0.0.3"
 name="Polpetta Stream"
 provider-name="celedev97">
 <requires>
@@ -20,6 +20,6 @@ provider-name="celedev97">
     <icon>resources\images\icon.png</icon>
     <fanart>resources\images\fanart.jpg</fanart>
   </assets>
-  <news>Updated with latest artwork metadata</news>
+  <news>Aggiunto reload degli episodi e migliorata funzionalità di cache</news>
 </extension>
 </addon>

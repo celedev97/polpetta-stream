@@ -117,6 +117,10 @@ class AnimeSaturnCached(AnimeSaturnDirect):
     _cacheDir = '.'
     _direct: AnimeSaturnDirect
 
+    _ANIME_LIST_CACHE_TIME = 3600 * 6  # 6 hours
+    _ANIME_DETAIL_CACHE_TIME = 3600 * 24 * 15  # 15 days
+    _ANIME_EPISODES_CACHE_TIME = 3600 * 6  # 6 hours
+
     def __init__(self, cache_dir='.', log=lambda x: None):
         self._cacheDir = cache_dir
         self._direct = AnimeSaturnDirect()
@@ -133,7 +137,7 @@ class AnimeSaturnCached(AnimeSaturnDirect):
                     last_update = loaded['last_update']
 
                     # check if it's past an hour from last update
-                    if time.time() - last_update < 3600:
+                    if time.time() - last_update < self._ANIME_LIST_CACHE_TIME:
                         self._log('C_HIT, Cache anime trovata!')
                         return deserialize(loaded['animes'])
                     else:
@@ -168,7 +172,7 @@ class AnimeSaturnCached(AnimeSaturnDirect):
                     last_update = loaded['last_update']
 
                     # check if it's past an hour from last update
-                    if time.time() - last_update < (3600 * 24 * 7):
+                    if time.time() - last_update < self._ANIME_DETAIL_CACHE_TIME:
                         self._log('C_HIT, Cache dettagli trovata!')
                         return deserialize(loaded['anime'])
                     else:
@@ -192,10 +196,6 @@ class AnimeSaturnCached(AnimeSaturnDirect):
 
         cache_file = os.path.join(cache_dir, anime.id + '.json')
 
-        xbmc.log('AnimeSaturnCached: cache dir: ' + self._cacheDir, xbmc.LOGWARNING)
-        xbmc.log('AnimeSaturnCached: details_dir: ' + cache_dir, xbmc.LOGWARNING)
-        xbmc.log('AnimeSaturnCached: cache_file: ' + cache_file, xbmc.LOGWARNING)
-
         if os.path.exists(cache_file):
             # reading cache to get the anime list if it's updated
             try:
@@ -204,7 +204,7 @@ class AnimeSaturnCached(AnimeSaturnDirect):
                     last_update = loaded['last_update']
 
                     # check if it's past an hour from last update
-                    if time.time() - last_update < 900:
+                    if time.time() - last_update < self._ANIME_EPISODES_CACHE_TIME:
                         self._log('C_HIT, Cache episodi trovata!')
                         episodes: List[Episode] = deserialize(loaded['episodes'])
                         anime.episodes = episodes
@@ -224,3 +224,24 @@ class AnimeSaturnCached(AnimeSaturnDirect):
 
         anime.episodes = output_episodes
         return output_episodes
+
+    def clear_episode_cache(self, anime_id):
+        cache_dir = os.path.join(self._cacheDir, 'episodes')
+        os.makedirs(cache_dir, exist_ok=True)
+
+        cache_file = os.path.join(cache_dir, anime_id + '.json')
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
+
+    def clear_anime_details_cache(self, anime_id):
+        cache_dir = os.path.join(self._cacheDir, 'details')
+        os.makedirs(cache_dir, exist_ok=True)
+
+        cache_file = os.path.join(cache_dir, anime_id + '.json')
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
+
+    def clear_anime_list_cache(self):
+        cache_file = self._cacheDir + '/animes.json'
+        if os.path.exists(cache_file):
+            os.remove(cache_file)

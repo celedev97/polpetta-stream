@@ -91,7 +91,10 @@ def list_animes(page=0, size=10):
     xbmcplugin.endOfDirectory(_HANDLE)
 
 
-def list_episodes(anime_id):
+def list_episodes(anime_id, force=False):
+    if force:
+        animesaturn.clear_episode_cache(anime_id)
+
     animes = animesaturn.get_anime_list()
 
     anime = list(filter(lambda x: x.id == anime_id, animes))[0]
@@ -101,6 +104,14 @@ def list_episodes(anime_id):
     episodes = animesaturn.get_anime_episodes(anime)
 
     xbmcplugin.setPluginCategory(_HANDLE, anime.name)
+
+    reload_item = xbmcgui.ListItem(label='Aggiorna Episodi')
+    xbmcplugin.addDirectoryItem(
+        handle=_HANDLE,
+        url=get_url(action=Actions.LIST_EPISODES, anime=anime.id, force=True),
+        listitem=reload_item,
+        isFolder=True,
+    )
 
     for episode in episodes:
         episode_item = xbmcgui.ListItem(anime.name + " " + str(episode.name))
@@ -190,16 +201,22 @@ def router(paramstring):
     # Check the parameters passed to the plugin
     if params:
         if params['action'] == Actions.LIST_ANIMES:
+            function_args = {}
             if 'page' in params:
-                list_animes(int(params['page']))
-            else:
-                list_animes()
+                function_args['page'] = int(params['page'])
+            if 'size' in params:
+                function_args['size'] = int(params['size'])
+
+            list_animes(**function_args)
 
         elif params['action'] == Actions.PLAY:
             play_video(params['video'], params['referer'])
 
         elif params['action'] == Actions.LIST_EPISODES:
-            list_episodes(params['anime'])
+            force = False
+            if 'force' in params:
+                force = True
+            list_episodes(params['anime'], force)
 
         elif params['action'] == Actions.ASK_SEARCH:
             ask_search()
